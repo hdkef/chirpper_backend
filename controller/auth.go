@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"cloud.google.com/go/firestore"
 	jwt "github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -18,7 +19,7 @@ type Auth struct {
 }
 
 //Login is to login
-func (a *Auth) Login() http.HandlerFunc {
+func (a *Auth) Login(client *firestore.Client) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
 		_, err := verifyToken(res, req)
@@ -40,7 +41,15 @@ func (a *Auth) Login() http.HandlerFunc {
 		}
 
 		//here implement finding hashedpass from database
-		hashedPass := "this is hashed pass"
+		db := NewFindRepo(client)
+		result, err := db.FindOneByUsername("users", loginForm.Username)
+		if err != nil {
+			utils.ResError(res, http.StatusInternalServerError, err)
+			return
+		}
+		var hashedPass string = result["Password"].(string)
+
+		fmt.Println("hashedPass", hashedPass)
 
 		err = bcrypt.CompareHashAndPassword([]byte(hashedPass), []byte(loginForm.Password))
 		if err != nil {
@@ -73,7 +82,7 @@ func (a *Auth) Login() http.HandlerFunc {
 }
 
 //Register is to register
-func (a *Auth) Register() http.HandlerFunc {
+func (a *Auth) Register(client *firestore.Client) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
 		var registerForm struct {
@@ -89,7 +98,7 @@ func (a *Auth) Register() http.HandlerFunc {
 			return
 		}
 
-		hashedPassByte, err := bcrypt.GenerateFromPassword([]byte(registerForm.Password), 20)
+		hashedPassByte, err := bcrypt.GenerateFromPassword([]byte(registerForm.Password), 5)
 
 		if err != nil {
 			utils.ResError(res, http.StatusInternalServerError, err)
@@ -97,7 +106,18 @@ func (a *Auth) Register() http.HandlerFunc {
 		}
 
 		//here implement inserting registerForm to database
-		fmt.Println(string(hashedPassByte))
+		db := NewInsertRepo(client)
+		err = db.InsertOne("users", map[string]interface{}{
+			"Username": registerForm.Username,
+			"Password": string(hashedPassByte),
+			"Email":    registerForm.Email,
+		})
+		if err != nil {
+			utils.ResError(res, http.StatusInternalServerError, err)
+			return
+		}
+
+		utils.ResOK(res, "register success")
 	}
 }
 

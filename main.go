@@ -17,15 +17,16 @@ func init() {
 
 func main() {
 
-	mydriver.ConnectDB()
+	client := mydriver.ConnectDB()
+	defer client.Close()
 
 	authHandler := controller.Auth{}
 	endPointsHandler := controller.EndPoints{}
 	router := mux.NewRouter()
 
-	router.HandleFunc("/login", authHandler.Login())
-	router.HandleFunc("/register", authHandler.Register())
-	router.HandleFunc("/feeds", endPointsHandler.Feeds())
+	router.HandleFunc("/login", authHandler.Login(client))
+	router.HandleFunc("/register", authHandler.Register(client))
+	router.HandleFunc("/feeds", endPointsHandler.Feeds(client))
 
 	PORT := os.Getenv("PORT")
 
