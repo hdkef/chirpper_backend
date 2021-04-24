@@ -3,12 +3,14 @@ package controller
 import (
 	"chirpper_backend/models"
 	"chirpper_backend/utils"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"os"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"golang.org/x/crypto/bcrypt"
 )
 
 //AuthStruct to group auth controller
@@ -22,16 +24,36 @@ func (a *Auth) Login() http.HandlerFunc {
 		_, err := verifyToken(res, req)
 
 		if err == nil {
-			http.Redirect(res, req, "/test", 302)
+			http.Redirect(res, req, "/feed", 302)
+			return
+		}
+
+		var loginForm struct {
+			Username string
+			Password string
+		}
+
+		err = json.NewDecoder(req.Body).Decode(&loginForm)
+		if err != nil {
+			utils.ResError(res, http.StatusInternalServerError, err)
+			return
+		}
+
+		//here implement finding hashedpass from database
+		hashedPass := "this is hashed pass"
+
+		err = bcrypt.CompareHashAndPassword([]byte(hashedPass), []byte(loginForm.Password))
+		if err != nil {
+			utils.ResError(res, http.StatusUnauthorized, err)
 			return
 		}
 
 		bearerCookie := &http.Cookie{}
 
 		var user models.User = models.User{
-			ID:   "1",
-			Name: "hadekha",
-			Role: "admin",
+			ID:       "1",
+			Username: loginForm.Username,
+			Role:     "admin",
 		}
 
 		tokenString, err := createToken(&user)
@@ -46,6 +68,7 @@ func (a *Auth) Login() http.HandlerFunc {
 
 		http.SetCookie(res, bearerCookie)
 
+		utils.ResOK(res, "LOGGED IN")
 	}
 }
 
@@ -53,6 +76,28 @@ func (a *Auth) Login() http.HandlerFunc {
 func (a *Auth) Register() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
+		var registerForm struct {
+			Username string
+			Email    string
+			Password string
+		}
+
+		err := json.NewDecoder(req.Body).Decode(&registerForm)
+
+		if err != nil {
+			utils.ResError(res, http.StatusInternalServerError, err)
+			return
+		}
+
+		hashedPassByte, err := bcrypt.GenerateFromPassword([]byte(registerForm.Password), 20)
+
+		if err != nil {
+			utils.ResError(res, http.StatusInternalServerError, err)
+			return
+		}
+
+		//here implement inserting registerForm to database
+		fmt.Println(string(hashedPassByte))
 	}
 }
 
@@ -61,9 +106,9 @@ func createToken(user *models.User) (string, error) {
 	secret := os.Getenv("SECRET")
 
 	var claims = jwt.MapClaims{
-		"ID":   user.ID,
-		"Name": user.Name,
-		"Role": user.Role,
+		"ID":       user.ID,
+		"Username": user.Username,
+		"Role":     user.Role,
 	}
 
 	fmt.Println("secret", secret, "claims", claims)

@@ -20,10 +20,12 @@ func main() {
 	mydriver.ConnectDB()
 
 	authHandler := controller.Auth{}
+	endPointsHandler := controller.EndPoints{}
 	router := mux.NewRouter()
 
 	router.HandleFunc("/login", authHandler.Login())
 	router.HandleFunc("/register", authHandler.Register())
+	router.HandleFunc("/feeds", endPointsHandler.Feeds())
 
 	PORT := os.Getenv("PORT")
 
