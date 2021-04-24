@@ -1,24 +1,38 @@
 package main
 
 import (
-	"chirpper_backend/utils"
-	"log"
+	"chirpper_backend/controller"
+	mydriver "chirpper_backend/driver"
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
-func helloworld() http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
-		utils.ResOK(res, "okkkkkkk")
-	}
+func init() {
+	_ = godotenv.Load()
 }
 
 func main() {
+
+	mydriver.ConnectDB()
+
+	authHandler := controller.Auth{}
 	router := mux.NewRouter()
-	router.HandleFunc("/", helloworld())
-	err := http.ListenAndServe(":4040", router)
+
+	router.HandleFunc("/login", authHandler.Login())
+	router.HandleFunc("/register", authHandler.Register())
+
+	PORT := os.Getenv("PORT")
+
+	address := fmt.Sprintf(":%v", PORT)
+
+	fmt.Println("serving and listening")
+
+	err := http.ListenAndServe(address, router)
 	if err != nil {
-		log.Fatal("something wrong")
+		panic(err)
 	}
 }

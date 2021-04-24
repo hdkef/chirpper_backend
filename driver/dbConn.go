@@ -1,1 +1,5 @@
 package driver
+
+func ConnectDB() {
+
+}
