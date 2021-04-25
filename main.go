@@ -28,6 +28,8 @@ func main() {
 	router.HandleFunc("/login", utils.Cors(authHandler.Login(client)))
 	router.HandleFunc("/register", utils.Cors(authHandler.Register(client)))
 	router.HandleFunc("/feeds", utils.Cors(endPointsHandler.Feeds(client)))
+	router.HandleFunc("/sendemailver", utils.Cors(authHandler.SendEmailVer(client)))
+	router.HandleFunc("/verifyemailver", utils.Cors(authHandler.VerifyEmailVer(client)))
 
 	PORT := os.Getenv("PORT")
 

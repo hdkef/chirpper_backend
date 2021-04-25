@@ -18,10 +18,10 @@ func NewFindRepo(client *firestore.Client) *FindRepoStruct {
 	return &FindRepoStruct{client}
 }
 
-func (x *FindRepoStruct) FindOneByUsername(collection string, username string) (map[string]interface{}, error) {
+func (x *FindRepoStruct) FindOneByField(collection string, field string, value string) (map[string]interface{}, error) {
 	ctx := context.Background()
-	iter := x.client.Collection("users").Where("Username", "==", username).Documents(ctx)
-	var usernameFound map[string]interface{}
+	iter := x.client.Collection(collection).Where(field, "==", value).Documents(ctx)
+	var dataFound map[string]interface{}
 	for {
 		doc, err := iter.Next()
 		if err == iterator.Done {
@@ -30,12 +30,12 @@ func (x *FindRepoStruct) FindOneByUsername(collection string, username string) (
 		if err != nil {
 			return map[string]interface{}{}, err
 		}
-		usernameFound = doc.Data()
-		usernameFound["ID"] = doc.Ref.ID
+		dataFound = doc.Data()
+		dataFound["ID"] = doc.Ref.ID
 		break
 	}
 
-	return usernameFound, nil
+	return dataFound, nil
 }
 
 func (x *FindRepoStruct) FindAll() {

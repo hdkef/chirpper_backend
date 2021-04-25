@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
+	"net/smtp"
 	"os"
 
 	"cloud.google.com/go/firestore"
@@ -42,7 +44,7 @@ func (a *Auth) Login(client *firestore.Client) http.HandlerFunc {
 
 		//here implement finding hashedpass from database
 		db := NewFindRepo(client)
-		result, err := db.FindOneByUsername("users", loginForm.Username)
+		result, err := db.FindOneByField("users", "Username", loginForm.Username)
 		if err != nil {
 			utils.ResError(res, http.StatusInternalServerError, err)
 			return
@@ -85,6 +87,76 @@ func (a *Auth) Login(client *firestore.Client) http.HandlerFunc {
 			utils.ResError(res, http.StatusInternalServerError, err)
 			return
 		}
+	}
+}
+
+//sendEmailVer is sent email verification to user
+func (a *Auth) SendEmailVer(client *firestore.Client) http.HandlerFunc {
+
+	return func(res http.ResponseWriter, req *http.Request) {
+
+		var payload struct {
+			Email string
+		}
+
+		err := json.NewDecoder(req.Body).Decode(&payload)
+		if err != nil {
+			utils.ResError(res, http.StatusInternalServerError, err)
+			return
+		}
+
+		//implement random digit generation
+		code := rand.Int31()
+		var codePayload map[string]interface{} = map[string]interface{}{
+			"Email": payload.Email,
+			"Code":  code,
+		}
+
+		db := NewInsertRepo(client)
+		err = db.InsertOne("emailver", codePayload)
+
+		emailMe := os.Getenv("EMAIL")
+		pswdMe := os.Getenv("PSWD")
+		host := "smtp.gmail.com"
+		emailTo := []string{payload.Email}
+		port := os.Getenv("SMTPPORT")
+		addr := fmt.Sprintf("%s:%s", host, port)
+		auth := smtp.PlainAuth("", emailMe, pswdMe, host)
+		msgString := "Subject: Email Verification\n\n" + "Hi, this is your email verification code : " + fmt.Sprint(code)
+		msgBytes := []byte(msgString)
+
+		err = smtp.SendMail(addr, auth, emailMe, emailTo, msgBytes)
+		if err != nil {
+			utils.ResError(res, http.StatusInternalServerError, err)
+			return
+		}
+
+		utils.ResOK(res, "email verification sent")
+	}
+}
+
+func (a *Auth) VerifyEmailVer(client *firestore.Client) http.HandlerFunc {
+	return func(res http.ResponseWriter, req *http.Request) {
+		var payload struct {
+			Email string
+			Code  string
+		}
+
+		err := json.NewDecoder(req.Body).Decode(&payload)
+		if err != nil {
+			utils.ResError(res, http.StatusInternalServerError, err)
+			return
+		}
+
+		db := NewFindRepo(client)
+		result, err := db.FindOneByField("emailver", "Email", payload.Email)
+		if err != nil {
+			utils.ResError(res, http.StatusInternalServerError, err)
+			return
+		}
+
+		//here implement compare code payload with code db
+		fmt.Println(result)
 	}
 }
 
