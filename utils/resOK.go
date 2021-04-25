@@ -8,8 +8,8 @@ import (
 //ResOK is to
 func ResOK(res http.ResponseWriter, msg string) {
 	obj := struct {
-		Message string
-	}{Message: msg}
+		MESSAGE string
+	}{MESSAGE: msg}
 	res.WriteHeader(http.StatusOK)
 	json.NewEncoder(res).Encode(obj)
 }

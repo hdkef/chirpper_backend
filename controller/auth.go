@@ -60,8 +60,6 @@ func (a *Auth) Login(client *firestore.Client) http.HandlerFunc {
 			return
 		}
 
-		bearerCookie := &http.Cookie{}
-
 		var user models.User = models.User{
 			ID:       result["ID"].(string),
 			Username: result["Username"].(string),
@@ -73,6 +71,8 @@ func (a *Auth) Login(client *firestore.Client) http.HandlerFunc {
 			utils.ResError(res, http.StatusInternalServerError, err)
 			return
 		}
+
+		bearerCookie := &http.Cookie{}
 
 		bearerCookie.Name = "bearer"
 		bearerCookie.Value = tokenString
