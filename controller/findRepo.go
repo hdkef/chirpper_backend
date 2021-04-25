@@ -31,8 +31,10 @@ func (x *FindRepoStruct) FindOneByUsername(collection string, username string) (
 			return map[string]interface{}{}, err
 		}
 		usernameFound = doc.Data()
+		usernameFound["ID"] = doc.Ref.ID
 		break
 	}
+
 	return usernameFound, nil
 }
 

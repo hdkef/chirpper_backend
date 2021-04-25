@@ -47,6 +47,11 @@ func (a *Auth) Login(client *firestore.Client) http.HandlerFunc {
 			utils.ResError(res, http.StatusInternalServerError, err)
 			return
 		}
+		if result == nil {
+			utils.ResError(res, http.StatusUnauthorized, errors.New("Username not found"))
+			return
+		}
+
 		var hashedPass string = result["Password"].(string)
 
 		err = bcrypt.CompareHashAndPassword([]byte(hashedPass), []byte(loginForm.Password))
@@ -58,9 +63,9 @@ func (a *Auth) Login(client *firestore.Client) http.HandlerFunc {
 		bearerCookie := &http.Cookie{}
 
 		var user models.User = models.User{
-			ID:       "1",
-			Username: loginForm.Username,
-			Role:     "admin",
+			ID:       result["ID"].(string),
+			Username: result["Username"].(string),
+			Email:    result["Email"].(string),
 		}
 
 		tokenString, err := createToken(&user)
@@ -75,7 +80,11 @@ func (a *Auth) Login(client *firestore.Client) http.HandlerFunc {
 
 		http.SetCookie(res, bearerCookie)
 
-		utils.ResOK(res, "LOGGED IN")
+		err = json.NewEncoder(res).Encode(user)
+		if err != nil {
+			utils.ResError(res, http.StatusInternalServerError, err)
+			return
+		}
 	}
 }
 
@@ -126,10 +135,8 @@ func createToken(user *models.User) (string, error) {
 	var claims = jwt.MapClaims{
 		"ID":       user.ID,
 		"Username": user.Username,
-		"Role":     user.Role,
+		"Email":    user.Email,
 	}
-
-	fmt.Println("secret", secret, "claims", claims)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
