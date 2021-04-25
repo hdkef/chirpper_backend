@@ -25,11 +25,11 @@ func main() {
 	endPointsHandler := controller.EndPoints{}
 	router := mux.NewRouter()
 
-	router.HandleFunc("/login", utils.Cors(authHandler.Login(client)))
-	router.HandleFunc("/register", utils.Cors(authHandler.Register(client)))
-	router.HandleFunc("/feeds", utils.Cors(endPointsHandler.Feeds(client)))
-	router.HandleFunc("/sendemailver", utils.Cors(authHandler.SendEmailVer(client)))
-	router.HandleFunc("/verifyemailver", utils.Cors(authHandler.VerifyEmailVer(client)))
+	router.HandleFunc("/auth/login", utils.Cors(authHandler.Login(client)))
+	router.HandleFunc("/auth/register", utils.Cors(authHandler.Register(client)))
+	router.HandleFunc("/endpoint/feeds", utils.Cors(endPointsHandler.Feeds(client)))
+	router.HandleFunc("/auth/sendemailver", utils.Cors(authHandler.SendEmailVer(client)))
+	router.HandleFunc("/auth/verifyemailver", utils.Cors(authHandler.VerifyEmailVer(client)))
 
 	PORT := os.Getenv("PORT")
 
