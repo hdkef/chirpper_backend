@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/smtp"
 	"os"
+	"strconv"
 
 	"cloud.google.com/go/firestore"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -155,8 +156,19 @@ func (a *Auth) VerifyEmailVer(client *firestore.Client) http.HandlerFunc {
 			return
 		}
 
-		//here implement compare code payload with code db
-		fmt.Println(result)
+		verified := strconv.FormatInt(result["Code"].(int64), 10) == payload.Code
+
+		if verified == true {
+			db2 := NewDeleteRepo(client)
+			err = db2.DeleteByID("emailver", result["ID"].(string))
+			if err != nil {
+				utils.ResError(res, http.StatusInternalServerError, err)
+				return
+			}
+			res.Write([]byte(fmt.Sprint(verified)))
+		} else {
+			res.Write([]byte(fmt.Sprint(verified)))
+		}
 	}
 }
 
