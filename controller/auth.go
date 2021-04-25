@@ -49,8 +49,6 @@ func (a *Auth) Login(client *firestore.Client) http.HandlerFunc {
 		}
 		var hashedPass string = result["Password"].(string)
 
-		fmt.Println("hashedPass", hashedPass)
-
 		err = bcrypt.CompareHashAndPassword([]byte(hashedPass), []byte(loginForm.Password))
 		if err != nil {
 			utils.ResError(res, http.StatusUnauthorized, err)

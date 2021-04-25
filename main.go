@@ -3,6 +3,7 @@ package main
 import (
 	"chirpper_backend/controller"
 	mydriver "chirpper_backend/driver"
+	"chirpper_backend/utils"
 	"fmt"
 	"net/http"
 	"os"
@@ -24,9 +25,9 @@ func main() {
 	endPointsHandler := controller.EndPoints{}
 	router := mux.NewRouter()
 
-	router.HandleFunc("/login", authHandler.Login(client))
-	router.HandleFunc("/register", authHandler.Register(client))
-	router.HandleFunc("/feeds", endPointsHandler.Feeds(client))
+	router.HandleFunc("/login", utils.Cors(authHandler.Login(client)))
+	router.HandleFunc("/register", utils.Cors(authHandler.Register(client)))
+	router.HandleFunc("/feeds", utils.Cors(endPointsHandler.Feeds(client)))
 
 	PORT := os.Getenv("PORT")
 
