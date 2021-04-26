@@ -55,7 +55,7 @@ func main() {
 
 	router.HandleFunc("/auth/login", utils.Cors(authHandler.Login(client)))
 	router.HandleFunc("/auth/register", utils.Cors(authHandler.Register(client)))
-	router.HandleFunc("/endpoint/feeds", utils.Cors(endPointsHandler.Feeds(client)))
+	router.HandleFunc("/endpoints/feeds", utils.Cors(endPointsHandler.Feeds(client)))
 	router.HandleFunc("/auth/sendemailver", utils.Cors(authHandler.SendEmailVer(client)))
 	router.HandleFunc("/auth/verifyemailver", utils.Cors(authHandler.VerifyEmailVer(client)))
 

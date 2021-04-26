@@ -11,11 +11,14 @@ import (
 	"net/smtp"
 	"os"
 	"strconv"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	jwt "github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 )
+
+const expiresaAtInt int64 = 5
 
 //AuthStruct to group auth controller
 type Auth struct {
@@ -207,6 +210,7 @@ func createToken(user *models.User) (string, error) {
 		"ID":       user.ID,
 		"Username": user.Username,
 		"Email":    user.Email,
+		"exp":      time.Now().Unix() + expiresaAtInt,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -214,7 +218,6 @@ func createToken(user *models.User) (string, error) {
 	tokenString, err := token.SignedString([]byte(secret))
 
 	if err != nil {
-		fmt.Println("tokenString", tokenString)
 		return "", err
 	}
 
@@ -224,39 +227,38 @@ func createToken(user *models.User) (string, error) {
 //authenticate is to verify token
 func verifyToken(res http.ResponseWriter, req *http.Request) (jwt.MapClaims, error) {
 
-	var claimsModel = jwt.MapClaims{
-		"Id":        "",
-		"Subject":   "",
-		"ExpiresAt": 0,
-		"Issuer":    "",
-		"Role":      "",
+	var claimsModel = jwt.MapClaims{}
+
+	token := req.Header.Get("BEARER")
+
+	if token == "" {
+		utils.ResError(res, http.StatusUnauthorized, errors.New("No bearer token"))
+		return claimsModel, errors.New("No bearer header")
 	}
 
-	token := &http.Cookie{}
-
-	storedCookie, _ := req.Cookie("bearer")
-	if storedCookie == nil {
-		return claimsModel, errors.New("BEARER COOKIE NOT FOUND")
-	}
-
-	token = storedCookie
-
-	parsedToken, err := jwt.Parse(token.Value, func(token *jwt.Token) (interface{}, error) {
+	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("there was an error")
 		}
 		return []byte(os.Getenv("SECRET")), nil
 	})
 
+	fmt.Println(parsedToken)
+
 	if err != nil {
-		return claimsModel, errors.New("Token was modified")
+		fmt.Println(err)
+		utils.ResError(res, http.StatusUnauthorized, err)
+		return claimsModel, errors.New("Token was modified or expired")
 	}
 	claims, ok := parsedToken.Claims.(jwt.MapClaims)
+
+	fmt.Println(parsedToken.Claims)
 
 	if ok && parsedToken.Valid {
 		claimsModel = claims
 		return claimsModel, nil
 	}
 
-	return claimsModel, errors.New("Token was either invalid or expired")
+	utils.ResError(res, http.StatusUnauthorized, errors.New("Uncaught authorization error"))
+	return claimsModel, errors.New("Uncaught authorization error")
 }
