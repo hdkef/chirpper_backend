@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"cloud.google.com/go/firestore"
@@ -9,12 +10,19 @@ import (
 type EndPoints struct {
 }
 
-func (x *EndPoints) Feeds(client *firestore.Client) http.HandlerFunc {
+func (x *EndPoints) Feed(client *firestore.Client) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		_, err := verifyToken(res, req)
 		if err != nil {
 			return
 		}
-		res.Write([]byte("feeds"))
+		payload := struct {
+			MESSAGE string
+		}{MESSAGE: "feed served"}
+
+		err = json.NewEncoder(res).Encode(&payload)
+		if err != nil {
+			return
+		}
 	}
 }

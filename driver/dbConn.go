@@ -2,7 +2,6 @@ package driver
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"cloud.google.com/go/firestore"
@@ -15,7 +14,6 @@ func ConnectDB() *firestore.Client {
 	opt := option.WithCredentialsFile("fskey.json")
 	app, err := firebase.NewApp(ctx, nil, opt)
 	if err != nil {
-		fmt.Println("error initializing firebase firestore")
 		panic(err)
 	}
 	client, err := app.Firestore(ctx)

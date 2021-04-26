@@ -18,7 +18,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const expiresaAtInt int64 = 5
+const expiresaAtInt int64 = 604800
 
 //AuthStruct to group auth controller
 type Auth struct {
