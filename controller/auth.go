@@ -11,7 +11,6 @@ import (
 	"net/smtp"
 	"os"
 	"strconv"
-	"time"
 
 	"cloud.google.com/go/firestore"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -69,13 +68,7 @@ func (a *Auth) Login(client *firestore.Client) http.HandlerFunc {
 			return
 		}
 
-		bearerCookie := &http.Cookie{}
-
-		bearerCookie.Name = "bearer"
-		bearerCookie.Value = tokenString
-		bearerCookie.Expires = time.Now().Add(15 * time.Minute)
-
-		http.SetCookie(res, bearerCookie)
+		user.Token = tokenString
 
 		err = json.NewEncoder(res).Encode(user)
 		if err != nil {
