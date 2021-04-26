@@ -11,6 +11,7 @@ import (
 	"net/smtp"
 	"os"
 	"strconv"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -25,19 +26,12 @@ type Auth struct {
 func (a *Auth) Login(client *firestore.Client) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
-		_, err := verifyToken(res, req)
-
-		if err == nil {
-			http.Redirect(res, req, "/feed", 302)
-			return
-		}
-
 		var loginForm struct {
 			Username string
 			Password string
 		}
 
-		err = json.NewDecoder(req.Body).Decode(&loginForm)
+		err := json.NewDecoder(req.Body).Decode(&loginForm)
 		if err != nil {
 			utils.ResError(res, http.StatusInternalServerError, err)
 			return
@@ -79,7 +73,7 @@ func (a *Auth) Login(client *firestore.Client) http.HandlerFunc {
 
 		bearerCookie.Name = "bearer"
 		bearerCookie.Value = tokenString
-		// bearerCookies.Expires = time.Now().Add(5 * time.Minute)
+		bearerCookie.Expires = time.Now().Add(15 * time.Minute)
 
 		http.SetCookie(res, bearerCookie)
 

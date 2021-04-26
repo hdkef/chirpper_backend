@@ -7,10 +7,38 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
+
+type spaHandler struct {
+	staticPath string
+	indexPath  string
+}
+
+func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	path, err := filepath.Abs(r.URL.Path)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	path = filepath.Join(h.staticPath, r.URL.Path)
+
+	_, err = os.Stat(path)
+	if os.IsNotExist(err) {
+		http.ServeFile(w, r, filepath.Join(h.staticPath, h.indexPath))
+		return
+	} else if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
+}
 
 func init() {
 	_ = godotenv.Load()
@@ -30,6 +58,9 @@ func main() {
 	router.HandleFunc("/endpoint/feeds", utils.Cors(endPointsHandler.Feeds(client)))
 	router.HandleFunc("/auth/sendemailver", utils.Cors(authHandler.SendEmailVer(client)))
 	router.HandleFunc("/auth/verifyemailver", utils.Cors(authHandler.VerifyEmailVer(client)))
+
+	// spa := spaHandler{staticPath: "dist/angular", indexPath: "index.html"}
+	// router.PathPrefix("/").Handler(spa)
 
 	PORT := os.Getenv("PORT")
 
