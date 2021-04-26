@@ -243,16 +243,12 @@ func verifyToken(res http.ResponseWriter, req *http.Request) (jwt.MapClaims, err
 		return []byte(os.Getenv("SECRET")), nil
 	})
 
-	fmt.Println(parsedToken)
-
 	if err != nil {
-		fmt.Println(err)
+		utils.ResClearSite(&res)
 		utils.ResError(res, http.StatusUnauthorized, err)
 		return claimsModel, errors.New("Token was modified or expired")
 	}
 	claims, ok := parsedToken.Claims.(jwt.MapClaims)
-
-	fmt.Println(parsedToken.Claims)
 
 	if ok && parsedToken.Valid {
 		claimsModel = claims
