@@ -14,10 +14,12 @@ type FindRepoStruct struct {
 	client *firestore.Client
 }
 
+//NewFindRepo return new memory for findrepostruct struct
 func NewFindRepo(client *firestore.Client) *FindRepoStruct {
 	return &FindRepoStruct{client}
 }
 
+//FindOneByField will get document in collection filtered by field and return one document
 func (x *FindRepoStruct) FindOneByField(collection string, field string, value string) (map[string]interface{}, error) {
 	ctx := context.Background()
 	iter := x.client.Collection(collection).Where(field, "==", value).Documents(ctx)

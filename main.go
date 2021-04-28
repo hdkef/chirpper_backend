@@ -18,6 +18,7 @@ type spaHandler struct {
 	indexPath  string
 }
 
+//ServerHTTP is to implement interface so that spaHandler can be use as Handler
 func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	path, err := filepath.Abs(r.URL.Path)
@@ -40,6 +41,7 @@ func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
 }
 
+//First init the env
 func init() {
 	_ = godotenv.Load()
 }
@@ -55,9 +57,10 @@ func main() {
 
 	router.HandleFunc("/auth/login", utils.Cors(authHandler.Login(client)))
 	router.HandleFunc("/auth/register", utils.Cors(authHandler.Register(client)))
-	router.HandleFunc("/endpoints/feed", utils.Cors(endPointsHandler.Feed(client)))
+	router.HandleFunc("/endpoints/checktoken", utils.Cors(endPointsHandler.CheckToken(client)))
 	router.HandleFunc("/auth/sendemailver", utils.Cors(authHandler.SendEmailVer(client)))
 	router.HandleFunc("/auth/verifyemailver", utils.Cors(authHandler.VerifyEmailVer(client)))
+	router.HandleFunc("/endpoints/ws", utils.Cors(endPointsHandler.EstablishWS(client)))
 
 	// spa := spaHandler{staticPath: "dist/angular", indexPath: "index.html"}
 	// router.PathPrefix("/").Handler(spa)

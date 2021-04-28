@@ -9,6 +9,7 @@ import (
 	"google.golang.org/api/option"
 )
 
+//ConnectDB initate connection to firebase and return connection (the firestore.Client)
 func ConnectDB() *firestore.Client {
 	ctx := context.Background()
 	opt := option.WithCredentialsFile("fskey.json")

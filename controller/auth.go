@@ -126,6 +126,7 @@ func (a *Auth) SendEmailVer(client *firestore.Client) http.HandlerFunc {
 	}
 }
 
+//VerifyEmailVer is to verify the digit code given to user's email
 func (a *Auth) VerifyEmailVer(client *firestore.Client) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		var payload struct {
@@ -224,7 +225,7 @@ func createToken(user *models.User) (string, error) {
 	return tokenString, nil
 }
 
-//authenticate is to verify token
+//authenticate is to verify token in header
 func verifyToken(res http.ResponseWriter, req *http.Request) (jwt.MapClaims, error) {
 
 	var claimsModel = jwt.MapClaims{}
