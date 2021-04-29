@@ -3,6 +3,7 @@ package controller
 import (
 	"chirpper_backend/utils"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -45,17 +46,19 @@ var initFromClientChan chan MsgPayload = make(chan MsgPayload)
 
 //to upgrade protocol
 var upgrader websocket.Upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool { return true },
+	CheckOrigin: verifyToken,
 }
 
-//CheckToken is to handle feed which is the first thing after logging in
+//CheckToken the first thing after logging in, to check token
 func (x *EndPoints) CheckToken(client *firestore.Client) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
 		fmt.Println("CheckToken")
 
-		_, err := verifyToken(res, req)
-		if err != nil {
+		valid := verifyToken(req)
+		if valid != true {
+			utils.ResClearSite(&res)
+			utils.ResError(res, http.StatusUnauthorized, errors.New("INVALID TOKEN"))
 			return
 		}
 

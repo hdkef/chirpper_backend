@@ -226,15 +226,12 @@ func createToken(user *models.User) (string, error) {
 }
 
 //authenticate is to verify token in header
-func verifyToken(res http.ResponseWriter, req *http.Request) (jwt.MapClaims, error) {
-
-	var claimsModel = jwt.MapClaims{}
+func verifyToken(req *http.Request) bool {
 
 	token := req.Header.Get("BEARER")
 
 	if token == "" {
-		utils.ResError(res, http.StatusUnauthorized, errors.New("No bearer token"))
-		return claimsModel, errors.New("No bearer header")
+		return false
 	}
 
 	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
@@ -245,17 +242,12 @@ func verifyToken(res http.ResponseWriter, req *http.Request) (jwt.MapClaims, err
 	})
 
 	if err != nil {
-		utils.ResClearSite(&res)
-		utils.ResError(res, http.StatusUnauthorized, err)
-		return claimsModel, errors.New("Token was modified or expired")
-	}
-	claims, ok := parsedToken.Claims.(jwt.MapClaims)
-
-	if ok && parsedToken.Valid {
-		claimsModel = claims
-		return claimsModel, nil
+		return false
 	}
 
-	utils.ResError(res, http.StatusUnauthorized, errors.New("Uncaught authorization error"))
-	return claimsModel, errors.New("Uncaught authorization error")
+	if parsedToken.Valid == true {
+		return true
+	} else {
+		return false
+	}
 }
