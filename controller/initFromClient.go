@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"chirpper_backend/models"
 	"fmt"
 	"time"
 
@@ -8,7 +9,7 @@ import (
 )
 
 //initFromClient handle if ws conn has been established
-func initFromClient(payload MsgPayload) {
+func initFromClient(payload models.MsgPayload) {
 	fmt.Println("initFromClient")
 	onlineMap[payload.ID] = payload.Conn
 	go pingPonger(payload)
@@ -16,7 +17,7 @@ func initFromClient(payload MsgPayload) {
 }
 
 //ping the client, if offline then delete id in onlineMap
-func pingPonger(payload MsgPayload) {
+func pingPonger(payload models.MsgPayload) {
 
 	fmt.Println("pingPonger")
 

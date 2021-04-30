@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"chirpper_backend/models"
 	"chirpper_backend/utils"
 	"context"
 	"errors"
@@ -11,7 +12,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/firestore"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/websocket"
 )
 
@@ -24,26 +24,13 @@ const (
 	pingPeriod = (pongWait * 9) / 10
 )
 
-//MsgPayload is to format the request sent from client
-type MsgPayload struct {
-	Conn      *websocket.Conn
-	Client    *firestore.Client
-	Mapclaims *jwt.MapClaims
-	Type      string
-	ID        string
-	Username  string
-	Email     string
-	ImageURL  string
-	Text      string
-}
-
 //this map contains ID as key and websocket conn as value, use to know who online
 var onlineMap map[string]*websocket.Conn = make(map[string]*websocket.Conn)
 
 //define all channels needed so concurrent can happen
 //channel for posting new chirp
-var postFromClientChan chan MsgPayload = make(chan MsgPayload)
-var initFromClientChan chan MsgPayload = make(chan MsgPayload)
+var postFromClientChan chan models.MsgPayload = make(chan models.MsgPayload)
+var initFromClientChan chan models.MsgPayload = make(chan models.MsgPayload)
 
 //to upgrade protocol
 var upgrader websocket.Upgrader = websocket.Upgrader{
@@ -96,7 +83,7 @@ func readMsg(ws *websocket.Conn, cancel context.CancelFunc, client *firestore.Cl
 
 	fmt.Println("readMsg")
 
-	var payload MsgPayload = MsgPayload{
+	var payload models.MsgPayload = models.MsgPayload{
 		Conn:   ws,
 		Client: client,
 	}
