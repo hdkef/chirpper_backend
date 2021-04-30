@@ -27,6 +27,7 @@ const (
 //MsgPayload is to format the request sent from client
 type MsgPayload struct {
 	Conn      *websocket.Conn
+	Client    *firestore.Client
 	Mapclaims *jwt.MapClaims
 	Type      string
 	ID        string
@@ -46,7 +47,10 @@ var initFromClientChan chan MsgPayload = make(chan MsgPayload)
 
 //to upgrade protocol
 var upgrader websocket.Upgrader = websocket.Upgrader{
-	CheckOrigin: verifyToken,
+	// CheckOrigin: verifyToken,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 //CheckToken the first thing after logging in, to check token
@@ -82,7 +86,7 @@ func (x *EndPoints) EstablishWS(client *firestore.Client) http.HandlerFunc {
 
 		fmt.Println("beginning ", runtime.NumGoroutine())
 
-		go readMsg(ws, cancel)
+		go readMsg(ws, cancel, client)
 		go routeMsg(ws, ctx)
 	}
 }
@@ -90,7 +94,7 @@ func (x *EndPoints) EstablishWS(client *firestore.Client) http.HandlerFunc {
 //postFromClient is a function to create a new post
 func postFromClient(payload MsgPayload) {
 	fmt.Println("postFromClient")
-	go broadcastNewFeed(payload, []string{"ID2"})
+	go broadcastNewFeed(payload)
 	//post chirp and ref it to user's feed
 	//post ref to user's followers
 	//send update to user's followers that online
@@ -105,33 +109,55 @@ func initFromClient(payload MsgPayload) {
 }
 
 //brodcastNewFeed broadcasts new post to online followers
-func broadcastNewFeed(payload MsgPayload, followers []string) {
+func broadcastNewFeed(payload MsgPayload) {
 
 	fmt.Println("broadcastNewFeed")
 
-	msg := struct {
-		ImageURL string
-		Text     string
-	}{
-		ImageURL: payload.ImageURL,
-		Text:     payload.Text,
+	db := NewFindRepo(payload.Client)
+	result, err := db.FindOneByID("users", payload.ID)
+	fmt.Println(result)
+	if err != nil {
+		return
 	}
+	followers := result["followers"].([]interface{})
 
-	for i := 0; i < len(followers); i++ {
-		ws, err := onlineMap[followers[i]]
-		if err == true && ws != payload.Conn {
-			ws.WriteJSON(msg)
+	var folIDChan chan string = make(chan string)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		defer cancel()
+		for _, v := range followers {
+			fmt.Println("send fol ID to channel")
+			folIDChan <- v.(string)
 		}
-	}
+	}()
+
+	go func() {
+		defer func() {
+			close(folIDChan)
+		}()
+		for {
+			select {
+			case ID := <-folIDChan:
+				fmt.Println("add feed to fol ID ", ID)
+			case <-ctx.Done():
+				fmt.Println("no more fol ID")
+				return
+			}
+		}
+	}()
+
 }
 
 //readMsg is to read incoming msg from client, each ws.conn be assigned one readMsg goroutine
-func readMsg(ws *websocket.Conn, cancel context.CancelFunc) {
+func readMsg(ws *websocket.Conn, cancel context.CancelFunc, client *firestore.Client) {
 
 	fmt.Println("readMsg")
 
 	var payload MsgPayload = MsgPayload{
-		Conn: ws,
+		Conn:   ws,
+		Client: client,
 	}
 
 	defer cancel()
