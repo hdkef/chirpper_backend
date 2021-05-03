@@ -30,7 +30,7 @@ func postFromClient(payload models.MsgPayload) {
 	followers := result["followers"].([]interface{})
 
 	// payload.PostID = insertedID
-
+	go sendSelfPayload(payload)
 	go broadcastPostFeed(payload, followers)
 	go afterPostFeed(payload, followers)
 	//post chirp and ref it to user's feed
@@ -124,16 +124,35 @@ func folIDAfterPostHandler(ctx context.Context, folIDChan chan string, payload m
 //sendPayload will send payload to online user
 func sendPayload(folID string, payload models.MsgPayload) {
 	ws, res := onlineMap[folID]
-	if res != true || ws == payload.Conn {
+	if res != true {
 		return
 	}
 	fmt.Println("found online user, writing json..")
 	ws.WriteJSON(struct {
+		Type     string
 		PostID   string
 		Username string
 		ImageURL string
 		Text     string
 	}{
+		Type:     "postFromServer",
+		PostID:   payload.PostID,
+		Username: payload.Username,
+		ImageURL: payload.ImageURL,
+		Text:     payload.Text,
+	})
+}
+
+func sendSelfPayload(payload models.MsgPayload) {
+	fmt.Println("writing payload to user..")
+	payload.Conn.WriteJSON(struct {
+		Type     string
+		PostID   string
+		Username string
+		ImageURL string
+		Text     string
+	}{
+		Type:     "postFromServer",
 		PostID:   payload.PostID,
 		Username: payload.Username,
 		ImageURL: payload.ImageURL,
