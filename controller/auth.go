@@ -40,7 +40,7 @@ func (a *Auth) Login(client *firestore.Client) http.HandlerFunc {
 		}
 
 		//here implement finding hashedpass from database
-		db := NewFindRepo(client)
+		db := NewDBRepo(client)
 		result, err := db.FindOneByField("users", "Username", loginForm.Username)
 		if err != nil {
 			utils.ResError(res, http.StatusInternalServerError, err)
@@ -103,8 +103,8 @@ func (a *Auth) SendEmailVer(client *firestore.Client) http.HandlerFunc {
 			"Code":  code,
 		}
 
-		db := NewInsertRepo(client)
-		err = db.InsertOne("emailver", codePayload)
+		db := NewDBRepo(client)
+		_, err = db.InsertOne("emailver", codePayload)
 
 		emailMe := os.Getenv("EMAIL")
 		pswdMe := os.Getenv("PSWD")
@@ -140,7 +140,7 @@ func (a *Auth) VerifyEmailVer(client *firestore.Client) http.HandlerFunc {
 			return
 		}
 
-		db := NewFindRepo(client)
+		db := NewDBRepo(client)
 		result, err := db.FindOneByField("emailver", "Email", payload.Email)
 		if err != nil {
 			utils.ResError(res, http.StatusInternalServerError, err)
@@ -150,8 +150,7 @@ func (a *Auth) VerifyEmailVer(client *firestore.Client) http.HandlerFunc {
 		verified := strconv.FormatInt(result["Code"].(int64), 10) == payload.Code
 
 		if verified == true {
-			db2 := NewDeleteRepo(client)
-			err = db2.DeleteByID("emailver", result["ID"].(string))
+			err = db.DeleteByID("emailver", result["ID"].(string))
 			if err != nil {
 				utils.ResError(res, http.StatusInternalServerError, err)
 				return
@@ -188,8 +187,8 @@ func (a *Auth) Register(client *firestore.Client) http.HandlerFunc {
 		}
 
 		//here implement inserting registerForm to database
-		db := NewInsertRepo(client)
-		err = db.InsertOne("users", map[string]interface{}{
+		db := NewDBRepo(client)
+		_, err = db.InsertOne("users", map[string]interface{}{
 			"Username": registerForm.Username,
 			"Password": string(hashedPassByte),
 			"Email":    registerForm.Email,

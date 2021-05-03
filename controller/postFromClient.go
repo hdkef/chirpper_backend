@@ -10,14 +10,27 @@ import (
 func postFromClient(payload models.MsgPayload) {
 	fmt.Println("postFromClient")
 
-	go postFeed(payload)
-	db := NewFindRepo(payload.Client)
+	db := NewDBRepo(payload.Client)
+
+	insertedID, err := db.InsertOne("chirps", map[string]interface{}{
+		"Username": payload.Username,
+		"ImageURL": payload.ImageURL,
+		"Text":     payload.Text,
+	})
+
+	payload.PostID = insertedID
+
+	go postFeedByID(payload.ID, payload)
+
 	result, err := db.FindOneByID("users", payload.ID)
 	fmt.Println(result)
 	if err != nil {
 		return
 	}
 	followers := result["followers"].([]interface{})
+
+	// payload.PostID = insertedID
+
 	go broadcastPostFeed(payload, followers)
 	go afterPostFeed(payload, followers)
 	//post chirp and ref it to user's feed
@@ -25,15 +38,20 @@ func postFromClient(payload models.MsgPayload) {
 	//send update to user's followers that online
 }
 
-//postFeed is post feed to user's document
-func postFeed(payload models.MsgPayload) {
-	fmt.Println("postFeed")
-	postFeedByID(payload.ID, payload)
-}
-
 //postFeedByID is intended for afterPostFeed alias insert new feed to user's followers's feed
 func postFeedByID(ID string, payload models.MsgPayload) {
 	fmt.Println("postFeedByID")
+
+	db := NewDBRepo(payload.Client)
+	_, err := db.InsertOneSubColByID("users", ID, "feed", map[string]interface{}{
+		"PostID":   payload.PostID,
+		"Username": payload.Username,
+		"ImageURL": payload.ImageURL,
+		"Text":     payload.Text,
+	})
+	if err != nil {
+		return
+	}
 }
 
 //afterPostFeed is update every user's followers feed
@@ -110,5 +128,15 @@ func sendPayload(folID string, payload models.MsgPayload) {
 		return
 	}
 	fmt.Println("found online user, writing json..")
-	ws.WriteJSON(payload)
+	ws.WriteJSON(struct {
+		PostID   string
+		Username string
+		ImageURL string
+		Text     string
+	}{
+		PostID:   payload.PostID,
+		Username: payload.Username,
+		ImageURL: payload.ImageURL,
+		Text:     payload.Text,
+	})
 }

@@ -13,6 +13,7 @@ type MsgPayload struct {
 	Mapclaims *jwt.MapClaims
 	Type      string
 	ID        string
+	PostID    string
 	Username  string
 	Email     string
 	ImageURL  string

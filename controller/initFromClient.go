@@ -13,7 +13,25 @@ func initFromClient(payload models.MsgPayload) {
 	fmt.Println("initFromClient")
 	onlineMap[payload.ID] = payload.Conn
 	go pingPonger(payload)
-	//implement send feed
+	go initFromServer(payload)
+	//implement sinitFromServer
+}
+
+func initFromServer(payload models.MsgPayload) {
+	db := NewDBRepo(payload.Client)
+	result, err := db.FindAllSubColByID("users", payload.ID, "feed")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	payloadToBeSent := struct {
+		Type string
+		Data []map[string]interface{}
+	}{
+		Type: "initFromServer",
+		Data: result,
+	}
+	payload.Conn.WriteJSON(payloadToBeSent)
 }
 
 //ping the client, if offline then delete id in onlineMap
