@@ -56,8 +56,10 @@ func pingPonger(payload models.MsgPayload) {
 	timer := time.NewTicker(pingPeriod)
 	defer func() {
 		timer.Stop()
-		delete(onlineMap, payload.ID)
-		fmt.Println("user deadactive, online map : ", onlineMap)
+		if onlineMap[payload.ID] == payload.Conn {
+			delete(onlineMap, payload.ID)
+		}
+		fmt.Println("online map : ", onlineMap)
 	}()
 	for {
 		select {
