@@ -9,6 +9,7 @@ import (
 	"cloud.google.com/go/firestore"
 )
 
+//Profile give info about someone's profile
 func (x *EndPoints) Profile(client *firestore.Client) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
