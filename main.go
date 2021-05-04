@@ -61,6 +61,7 @@ func main() {
 	router.HandleFunc("/auth/sendemailver", utils.Cors(authHandler.SendEmailVer(client)))
 	router.HandleFunc("/auth/verifyemailver", utils.Cors(authHandler.VerifyEmailVer(client)))
 	router.HandleFunc("/endpoints/ws", utils.Cors(endPointsHandler.EstablishWS(client)))
+	router.HandleFunc("/endpoints/profile", utils.Cors(endPointsHandler.Profile(client)))
 
 	// spa := spaHandler{staticPath: "dist/angular", indexPath: "index.html"}
 	// router.PathPrefix("/").Handler(spa)
