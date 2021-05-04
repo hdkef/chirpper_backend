@@ -28,7 +28,7 @@ func postFromClient(payload models.MsgPayload) {
 		"ImageURL":  payload.ImageURL,
 		"Text":      payload.Text,
 		"Date":      payload.Date,
-		"AvatarURL": payload.Date,
+		"AvatarURL": payload.AvatarURL,
 	})
 
 	payload.PostID = insertedID
