@@ -60,9 +60,10 @@ func (a *Auth) Login(client *firestore.Client) http.HandlerFunc {
 		}
 
 		var user models.User = models.User{
-			ID:       result["ID"].(string),
-			Username: result["Username"].(string),
-			Email:    result["Email"].(string),
+			ID:        result["ID"].(string),
+			Username:  result["Username"].(string),
+			Email:     result["Email"].(string),
+			AvatarURL: result["AvatarURL"].(string),
 		}
 
 		tokenString, err := createToken(&user)

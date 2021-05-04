@@ -4,6 +4,7 @@ import (
 	"chirpper_backend/models"
 	"context"
 	"fmt"
+	"time"
 )
 
 //postFromClient is a function to create a new post
@@ -18,12 +19,16 @@ func postFromClient(payload models.MsgPayload) {
 		return
 	}
 
+	payload.Date = time.Now().Format("02-Jan-2006")
+
 	db := NewDBRepo(payload.Client)
 
 	insertedID, err := db.InsertOne("chirps", map[string]interface{}{
-		"Username": payload.Username,
-		"ImageURL": payload.ImageURL,
-		"Text":     payload.Text,
+		"Username":  payload.Username,
+		"ImageURL":  payload.ImageURL,
+		"Text":      payload.Text,
+		"Date":      payload.Date,
+		"AvatarURL": payload.Date,
 	})
 
 	payload.PostID = insertedID
@@ -52,10 +57,12 @@ func postFeedByIDID(ID string, payload models.MsgPayload) {
 
 	db := NewDBRepo(payload.Client)
 	err := db.InsertOneSubColByIDID("users", ID, "feed", payload.PostID, map[string]interface{}{
-		"PostID":   payload.PostID,
-		"Username": payload.Username,
-		"ImageURL": payload.ImageURL,
-		"Text":     payload.Text,
+		"PostID":    payload.PostID,
+		"Username":  payload.Username,
+		"ImageURL":  payload.ImageURL,
+		"Text":      payload.Text,
+		"Date":      payload.Date,
+		"AvatarURL": payload.AvatarURL,
 	})
 	if err != nil {
 		return
@@ -137,33 +144,41 @@ func sendPayload(folID string, payload models.MsgPayload) {
 	}
 	fmt.Println("found online user, writing json..")
 	ws.WriteJSON(struct {
-		Type     string
-		PostID   string
-		Username string
-		ImageURL string
-		Text     string
+		Type      string
+		PostID    string
+		Username  string
+		ImageURL  string
+		Text      string
+		Date      string
+		AvatarURL string
 	}{
-		Type:     "postFromServer",
-		PostID:   payload.PostID,
-		Username: payload.Username,
-		ImageURL: payload.ImageURL,
-		Text:     payload.Text,
+		Type:      "postFromServer",
+		PostID:    payload.PostID,
+		Username:  payload.Username,
+		ImageURL:  payload.ImageURL,
+		Text:      payload.Text,
+		Date:      payload.Date,
+		AvatarURL: payload.AvatarURL,
 	})
 }
 
 func sendSelfPayload(payload models.MsgPayload) {
 	fmt.Println("writing payload to user..")
 	payload.Conn.WriteJSON(struct {
-		Type     string
-		PostID   string
-		Username string
-		ImageURL string
-		Text     string
+		Type      string
+		PostID    string
+		Username  string
+		ImageURL  string
+		Text      string
+		Date      string
+		AvatarURL string
 	}{
-		Type:     "postFromServer",
-		PostID:   payload.PostID,
-		Username: payload.Username,
-		ImageURL: payload.ImageURL,
-		Text:     payload.Text,
+		Type:      "postFromServer",
+		PostID:    payload.PostID,
+		Username:  payload.Username,
+		ImageURL:  payload.ImageURL,
+		Text:      payload.Text,
+		Date:      payload.Date,
+		AvatarURL: payload.AvatarURL,
 	})
 }

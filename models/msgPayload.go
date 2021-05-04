@@ -19,4 +19,6 @@ type MsgPayload struct {
 	ImageURL  string
 	Text      string
 	Bearer    string
+	Date      string
+	AvatarURL string
 }
