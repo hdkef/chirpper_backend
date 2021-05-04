@@ -45,6 +45,7 @@ func (x *EndPoints) Profile(client *firestore.Client) http.HandlerFunc {
 			Desc           string
 			FollowerCount  int
 			FollowingCount int
+			Feed           []map[string]interface{}
 		}{
 			Username:       result["Username"].(string),
 			Email:          result["Username"].(string),
@@ -53,6 +54,15 @@ func (x *EndPoints) Profile(client *firestore.Client) http.HandlerFunc {
 			FollowerCount:  len(result["followers"].([]interface{})),
 			FollowingCount: len(result["followings"].([]interface{})),
 		}
+
+		result2, err := db.FindAllByField("chirpper", "Username", payloadToBeSent.Username)
+		if err != nil {
+			fmt.Println("db error", err)
+			utils.ResError(res, http.StatusInternalServerError, err)
+			return
+		}
+
+		payloadToBeSent.Feed = result2
 
 		err = json.NewEncoder(res).Encode(&payloadToBeSent)
 		if err != nil {
