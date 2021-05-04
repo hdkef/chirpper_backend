@@ -18,4 +18,5 @@ type MsgPayload struct {
 	Email     string
 	ImageURL  string
 	Text      string
+	Bearer    string
 }

@@ -34,7 +34,6 @@ var initFromClientChan chan models.MsgPayload = make(chan models.MsgPayload)
 
 //to upgrade protocol
 var upgrader websocket.Upgrader = websocket.Upgrader{
-	// CheckOrigin: verifyToken,
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},

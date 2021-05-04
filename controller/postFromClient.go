@@ -10,6 +10,14 @@ import (
 func postFromClient(payload models.MsgPayload) {
 	fmt.Println("postFromClient")
 
+	valid := verifyTokenString(payload.Bearer)
+
+	if valid == false {
+		fmt.Println("invalid bearer")
+		payload.Conn.Close()
+		return
+	}
+
 	db := NewDBRepo(payload.Client)
 
 	insertedID, err := db.InsertOne("chirps", map[string]interface{}{
@@ -20,7 +28,7 @@ func postFromClient(payload models.MsgPayload) {
 
 	payload.PostID = insertedID
 
-	go postFeedByID(payload.ID, payload)
+	go postFeedByIDID(payload.ID, payload)
 
 	result, err := db.FindOneByID("users", payload.ID)
 	fmt.Println(result)
@@ -39,11 +47,11 @@ func postFromClient(payload models.MsgPayload) {
 }
 
 //postFeedByID is intended for afterPostFeed alias insert new feed to user's followers's feed
-func postFeedByID(ID string, payload models.MsgPayload) {
+func postFeedByIDID(ID string, payload models.MsgPayload) {
 	fmt.Println("postFeedByID")
 
 	db := NewDBRepo(payload.Client)
-	_, err := db.InsertOneSubColByID("users", ID, "feed", map[string]interface{}{
+	err := db.InsertOneSubColByIDID("users", ID, "feed", payload.PostID, map[string]interface{}{
 		"PostID":   payload.PostID,
 		"Username": payload.Username,
 		"ImageURL": payload.ImageURL,
@@ -114,7 +122,7 @@ func folIDAfterPostHandler(ctx context.Context, folIDChan chan string, payload m
 	for {
 		select {
 		case ID := <-folIDChan:
-			postFeedByID(ID, payload)
+			postFeedByIDID(ID, payload)
 		case <-ctx.Done():
 			return
 		}

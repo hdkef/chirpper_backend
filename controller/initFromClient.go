@@ -11,6 +11,15 @@ import (
 //initFromClient handle if ws conn has been established
 func initFromClient(payload models.MsgPayload) {
 	fmt.Println("initFromClient")
+
+	valid := verifyTokenString(payload.Bearer)
+
+	if valid == false {
+		fmt.Println("invalid bearer ", payload.Bearer)
+		payload.Conn.Close()
+		return
+	}
+
 	onlineMap[payload.ID] = payload.Conn
 	go pingPonger(payload)
 	go initFromServer(payload)
@@ -48,7 +57,7 @@ func pingPonger(payload models.MsgPayload) {
 	defer func() {
 		timer.Stop()
 		delete(onlineMap, payload.ID)
-		fmt.Println("online Map ", onlineMap)
+		fmt.Println("user deadactive, online map : ", onlineMap)
 	}()
 	for {
 		select {
