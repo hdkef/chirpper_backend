@@ -44,6 +44,11 @@ func postFromClient(payload models.MsgPayload) {
 
 	// payload.PostID = insertedID
 	go sendSelfPayload(payload)
+
+	if followers == nil {
+		return
+	}
+
 	go broadcastPostFeed(payload, followers)
 	go afterPostFeed(payload, followers)
 	//post chirp and ref it to user's feed

@@ -56,13 +56,17 @@ func (x *EndPoints) Profile(client *firestore.Client) http.HandlerFunc {
 		}
 
 		result2, err := db.FindAllByField("chirpper", "Username", payloadToBeSent.Username)
-		if err != nil {
+		if err != nil && err.Error() != "NO RESULT" {
 			fmt.Println("db error", err)
 			utils.ResError(res, http.StatusInternalServerError, err)
 			return
 		}
 
-		payloadToBeSent.Feed = result2
+		if err.Error() == "NO RESULT" {
+			payloadToBeSent.Feed = nil
+		} else {
+			payloadToBeSent.Feed = result2
+		}
 
 		err = json.NewEncoder(res).Encode(&payloadToBeSent)
 		if err != nil {
