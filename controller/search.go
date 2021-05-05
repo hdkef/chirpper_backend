@@ -25,6 +25,8 @@ func (x *EndPoints) Search(client *firestore.Client) http.HandlerFunc {
 			return
 		}
 
+		fmt.Println("Searchkey", payload.Searchkey)
+
 		db := NewDBRepo(client)
 
 		result, err := db.FindAllByField("users", "Username", payload.Searchkey)
@@ -32,6 +34,8 @@ func (x *EndPoints) Search(client *firestore.Client) http.HandlerFunc {
 			utils.ResError(res, http.StatusInternalServerError, err)
 			return
 		}
+
+		fmt.Println(result)
 
 		err = json.NewEncoder(res).Encode(&result)
 		if err != nil {

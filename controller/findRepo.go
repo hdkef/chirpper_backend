@@ -101,3 +101,24 @@ func (x *DBRepoStruct) FindAllSubColByID(collectionOne string, ID string, collec
 	}
 	return result, nil
 }
+
+//FindAllSubColByIDField will find all doc in subcollection filtered by field
+func (x *DBRepoStruct) FindAllSubColByIDField(collectionOne string, ID string, field string, value string, collectionTwo string) ([]map[string]interface{}, error) {
+	ctx := context.Background()
+	iter := x.client.Collection(collectionOne).Doc(ID).Collection(collectionTwo).Where(field, "==", value).Documents(ctx)
+	var result []map[string]interface{}
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return []map[string]interface{}{}, err
+		}
+		result = append(result, doc.Data())
+	}
+	if result == nil {
+		return nil, errors.New("NO RESULT")
+	}
+	return result, nil
+}

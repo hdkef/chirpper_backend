@@ -24,6 +24,7 @@ func postFromClient(payload models.MsgPayload) {
 	db := NewDBRepo(payload.Client)
 
 	insertedID, err := db.InsertOne("chirps", map[string]interface{}{
+		"ID":        payload.ID,
 		"Username":  payload.Username,
 		"ImageURL":  payload.ImageURL,
 		"Text":      payload.Text,
@@ -62,6 +63,7 @@ func postFeedByIDID(ID string, payload models.MsgPayload) {
 
 	db := NewDBRepo(payload.Client)
 	err := db.InsertOneSubColByIDID("users", ID, "feed", payload.PostID, map[string]interface{}{
+		"ID":        payload.ID,
 		"PostID":    payload.PostID,
 		"Username":  payload.Username,
 		"ImageURL":  payload.ImageURL,
@@ -150,6 +152,7 @@ func sendPayload(folID string, payload models.MsgPayload) {
 	fmt.Println("found online user, writing json..")
 	ws.WriteJSON(struct {
 		Type      string
+		ID        string
 		PostID    string
 		Username  string
 		ImageURL  string
@@ -158,6 +161,7 @@ func sendPayload(folID string, payload models.MsgPayload) {
 		AvatarURL string
 	}{
 		Type:      "postFromServer",
+		ID:        payload.ID,
 		PostID:    payload.PostID,
 		Username:  payload.Username,
 		ImageURL:  payload.ImageURL,
@@ -171,6 +175,7 @@ func sendSelfPayload(payload models.MsgPayload) {
 	fmt.Println("writing payload to user..")
 	payload.Conn.WriteJSON(struct {
 		Type      string
+		ID        string
 		PostID    string
 		Username  string
 		ImageURL  string
@@ -179,6 +184,7 @@ func sendSelfPayload(payload models.MsgPayload) {
 		AvatarURL string
 	}{
 		Type:      "postFromServer",
+		ID:        payload.ID,
 		PostID:    payload.PostID,
 		Username:  payload.Username,
 		ImageURL:  payload.ImageURL,

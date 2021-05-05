@@ -36,8 +36,6 @@ func (x *EndPoints) Profile(client *firestore.Client) http.HandlerFunc {
 			return
 		}
 
-		fmt.Println(result)
-
 		payloadToBeSent := struct {
 			Username       string
 			Email          string
@@ -55,18 +53,18 @@ func (x *EndPoints) Profile(client *firestore.Client) http.HandlerFunc {
 			FollowingCount: len(result["followings"].([]interface{})),
 		}
 
-		result2, err := db.FindAllByField("chirpper", "Username", payloadToBeSent.Username)
+		result2, err := db.FindAllSubColByIDField("users", payload.ID, "ID", payload.ID, "feed")
 		if err != nil && err.Error() != "NO RESULT" {
 			fmt.Println("db error", err)
 			utils.ResError(res, http.StatusInternalServerError, err)
 			return
-		}
-
-		if err.Error() == "NO RESULT" {
+		} else if err != nil && err.Error() == "NO RESULT" {
 			payloadToBeSent.Feed = nil
 		} else {
 			payloadToBeSent.Feed = result2
 		}
+
+		fmt.Println(payloadToBeSent)
 
 		err = json.NewEncoder(res).Encode(&payloadToBeSent)
 		if err != nil {
