@@ -3,6 +3,7 @@ package controller
 import (
 	"chirpper_backend/utils"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -12,6 +13,13 @@ import (
 //Search someone
 func (x *EndPoints) Search(client *firestore.Client) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
+
+		valid := verifyToken(req)
+		if valid != true {
+			utils.ResClearSite(&res)
+			utils.ResError(res, http.StatusUnauthorized, errors.New("INVALID TOKEN"))
+			return
+		}
 
 		fmt.Println("Search")
 

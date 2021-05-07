@@ -31,6 +31,7 @@ var onlineMap map[string]*websocket.Conn = make(map[string]*websocket.Conn)
 //channel for posting new chirp
 var postFromClientChan chan models.MsgPayload = make(chan models.MsgPayload)
 var initFromClientChan chan models.MsgPayload = make(chan models.MsgPayload)
+var commentFromClientChan chan models.MsgPayload = make(chan models.MsgPayload)
 
 //to upgrade protocol
 var upgrader websocket.Upgrader = websocket.Upgrader{
@@ -100,6 +101,8 @@ func readMsg(ws *websocket.Conn, cancel context.CancelFunc, client *firestore.Cl
 			postFromClientChan <- payload
 		case "initFromClient":
 			initFromClientChan <- payload
+		case "commentFromClient":
+			commentFromClientChan <- payload
 		}
 	}
 }
@@ -121,6 +124,8 @@ func routeMsg(ws *websocket.Conn, ctx context.Context) {
 			postFromClient(msg)
 		case msg := <-initFromClientChan:
 			initFromClient(msg)
+		case msg := <-commentFromClientChan:
+			commentFromClient(msg)
 		}
 	}
 
