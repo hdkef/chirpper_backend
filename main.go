@@ -63,6 +63,7 @@ func main() {
 	router.HandleFunc("/endpoints/ws", utils.Cors(endPointsHandler.EstablishWS(client)))
 	router.HandleFunc("/endpoints/profile", utils.Cors(endPointsHandler.Profile(client)))
 	router.HandleFunc("/endpoints/search", utils.Cors(endPointsHandler.Search(client)))
+	router.HandleFunc("/endpoints/comment", utils.Cors(endPointsHandler.EstablishComment(client)))
 
 	// spa := spaHandler{staticPath: "dist/angular", indexPath: "index.html"}
 	// router.PathPrefix("/").Handler(spa)
