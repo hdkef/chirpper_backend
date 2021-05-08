@@ -20,7 +20,7 @@ var commentFromClientChan chan models.MsgPayload = make(chan models.MsgPayload)
 var initCommentFromClientChan chan models.MsgPayload = make(chan models.MsgPayload)
 
 //postIDMap is map contains postID subscriber
-var postIDMap map[string][]*websocket.Conn = make(map[string][]*websocket.Conn)
+var postIDMap map[string]map[string]*websocket.Conn = make(map[string]map[string]*websocket.Conn)
 
 //establishComment will establish websocket inside comment
 func (x *EndPoints) EstablishComment(client *firestore.Client) http.HandlerFunc {
@@ -47,6 +47,8 @@ func (x *EndPoints) EstablishComment(client *firestore.Client) http.HandlerFunc 
 //initCommentFromClient handle if user went to comment
 func initCommentFromClient(payload models.MsgPayload) {
 
+	fmt.Println("initCommentFromClient()")
+
 	// valid := verifyTokenString(payload.Bearer)
 
 	// if valid == false {
@@ -55,7 +57,9 @@ func initCommentFromClient(payload models.MsgPayload) {
 	// 	return
 	// }
 
-	postIDMap[payload.PostID] = append(postIDMap[payload.PostID], payload.Conn)
+	postIDMap[payload.PostID] = map[string]*websocket.Conn{
+		payload.ID: payload.Conn,
+	}
 
 	go commentPingPonger(payload)
 	go initCommentFromServer(payload)
@@ -133,6 +137,30 @@ func commentFromClient(payload models.MsgPayload) {
 			AvatarURL: payload.AvatarURL,
 		})
 	}()
+	go broadcastComment(payload)
+}
+
+//broadcastComment is to broadcast comment to postID subscriber
+func broadcastComment(payload models.MsgPayload) {
+	for _, v := range postIDMap[payload.PostID] {
+		if v != payload.Conn {
+			v.WriteJSON(struct {
+				Type      string
+				ID        string
+				Username  string
+				Text      string
+				Date      string
+				AvatarURL string
+			}{
+				Type:      "commentFromServer",
+				ID:        payload.ID,
+				Username:  payload.Username,
+				Text:      payload.Text,
+				Date:      payload.Date,
+				AvatarURL: payload.AvatarURL,
+			})
+		}
+	}
 }
 
 //readComment is to read incoming comment from client, each ws.conn be assigned one readMsg goroutine
@@ -195,15 +223,8 @@ func commentPingPonger(payload models.MsgPayload) {
 	timer := time.NewTicker(pingPeriod)
 	defer func() {
 		timer.Stop()
-		if len(postIDMap[payload.PostID]) == 1 {
-			delete(postIDMap, payload.PostID)
-		} else {
-			for i, v := range postIDMap[payload.PostID] {
-				if v == payload.Conn {
-					postIDMap[payload.PostID] = append(postIDMap[payload.PostID][:i], postIDMap[payload.PostID][i+1:]...)
-					break
-				}
-			}
+		if postIDMap[payload.PostID][payload.ID] == payload.Conn {
+			delete(postIDMap[payload.PostID], payload.ID)
 		}
 		fmt.Println("postID map : ", postIDMap[payload.PostID])
 	}()
