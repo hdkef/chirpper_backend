@@ -2,7 +2,6 @@ package models
 
 import (
 	"cloud.google.com/go/firestore"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/websocket"
 )
 
@@ -10,7 +9,6 @@ import (
 type MsgPayload struct {
 	Conn      *websocket.Conn
 	Client    *firestore.Client
-	Mapclaims *jwt.MapClaims
 	Type      string
 	ID        string
 	PostID    string

@@ -2,10 +2,102 @@ package controller
 
 import (
 	"chirpper_backend/models"
+	"chirpper_backend/utils"
 	"context"
+	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
 	"time"
+
+	"cloud.google.com/go/firestore"
 )
+
+func (x *EndPoints) PostWithImage(client *firestore.Client) http.HandlerFunc {
+	return func(res http.ResponseWriter, req *http.Request) {
+		defer func() {
+			utils.ResOK(res, "OK")
+			return
+		}()
+
+		fmt.Println("PostWithImage")
+
+		valid := verifyToken(req)
+		if valid != true {
+			utils.ResClearSite(&res)
+			utils.ResError(res, http.StatusUnauthorized, errors.New("INVALID TOKEN"))
+			return
+		}
+
+		if err := req.ParseMultipartForm(1024); err != nil {
+			fmt.Println(err)
+			utils.ResError(res, http.StatusInternalServerError, err)
+			return
+		}
+
+		var payload models.MsgPayload = models.MsgPayload{
+			Conn:      onlineMap[req.FormValue("ID")],
+			Type:      req.FormValue("Type"),
+			Client:    client,
+			ID:        req.FormValue("ID"),
+			Username:  req.FormValue("Username"),
+			Email:     req.FormValue("Email"),
+			AvatarURL: req.FormValue("AvatarURL"),
+			Text:      req.FormValue("Text"),
+			Bearer:    req.FormValue("Bearer"),
+		}
+
+		//implement store image in server and retrieve img directory location
+
+		imgLocation, err := storeImage(res, req)
+
+		if err != nil {
+			fmt.Println(err)
+			utils.ResError(res, http.StatusInternalServerError, err)
+			return
+		}
+
+		payload.ImageURL = imgLocation
+
+		go postFromClient(payload)
+
+		fmt.Println(payload)
+	}
+}
+
+func storeImage(res http.ResponseWriter, req *http.Request) (string, error) {
+	uploadedFile, handler, err := req.FormFile("Image")
+	if err != nil {
+		fmt.Println(err)
+		return "", err
+	}
+	defer uploadedFile.Close()
+
+	dir, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+		return "", err
+	}
+
+	filename := handler.Filename
+	fileLocation := filepath.Join(dir, "post", filename) //TOBEIMPLEMENTED "dist" "angular" "assets" "post"
+
+	targetFile, err := os.OpenFile(fileLocation, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		fmt.Println(err)
+		return "", err
+	}
+	defer targetFile.Close()
+
+	if _, err := io.Copy(targetFile, uploadedFile); err != nil {
+		fmt.Println(err)
+		return "", err
+	}
+
+	return fileLocation, nil
+}
 
 //postFromClient is a function to create a new post
 func postFromClient(payload models.MsgPayload) {
