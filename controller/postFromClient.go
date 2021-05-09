@@ -82,7 +82,7 @@ func storeImage(res http.ResponseWriter, req *http.Request) (string, error) {
 	}
 
 	filename := handler.Filename
-	fileLocation := filepath.Join(dir, "post", filename) //TOBEIMPLEMENTED "dist" "angular" "assets" "post"
+	fileLocation := filepath.Join(dir, os.Getenv("STATICPATH"), "assets", "post", filename) //TOBEIMPLEMENTED "dist" "angular" "assets" "post"
 
 	targetFile, err := os.OpenFile(fileLocation, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
@@ -96,7 +96,7 @@ func storeImage(res http.ResponseWriter, req *http.Request) (string, error) {
 		return "", err
 	}
 
-	return fileLocation, nil
+	return fmt.Sprintf("assets/post/%s", filename), nil
 }
 
 //postFromClient is a function to create a new post

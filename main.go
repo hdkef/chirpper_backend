@@ -66,7 +66,7 @@ func main() {
 	router.HandleFunc("/endpoints/comment", utils.Cors(endPointsHandler.EstablishComment(client)))
 	router.HandleFunc("/endpoints/postwithimage", utils.Cors(endPointsHandler.PostWithImage(client)))
 
-	// spa := spaHandler{staticPath: "dist/angular", indexPath: "index.html"}
+	// spa := spaHandler{staticPath: os.Getenv("STATICPATH"), indexPath: "index.html"}
 	// router.PathPrefix("/").Handler(spa)
 
 	PORT := os.Getenv("PORT")
