@@ -51,7 +51,7 @@ func (x *EndPoints) PostWithImage(client *firestore.Client) http.HandlerFunc {
 
 		//implement store image in server and retrieve img directory location
 
-		imgLocation, err := storeImage(res, req)
+		imgLocation, err := storeImage(res, req, "Image", "post")
 
 		if err != nil {
 			fmt.Println(err)
@@ -67,8 +67,8 @@ func (x *EndPoints) PostWithImage(client *firestore.Client) http.HandlerFunc {
 	}
 }
 
-func storeImage(res http.ResponseWriter, req *http.Request) (string, error) {
-	uploadedFile, handler, err := req.FormFile("Image")
+func storeImage(res http.ResponseWriter, req *http.Request, formfilename string, foldername string) (string, error) {
+	uploadedFile, handler, err := req.FormFile(formfilename)
 	if err != nil {
 		fmt.Println(err)
 		return "", err
@@ -82,7 +82,7 @@ func storeImage(res http.ResponseWriter, req *http.Request) (string, error) {
 	}
 
 	filename := handler.Filename
-	fileLocation := filepath.Join(dir, os.Getenv("STATICPATH"), "assets", "post", filename) //TOBEIMPLEMENTED "dist" "angular" "assets" "post"
+	fileLocation := filepath.Join(dir, os.Getenv("STATICPATH"), "assets", foldername, filename) //TOBEIMPLEMENTED "dist" "angular" "assets" "post"
 
 	targetFile, err := os.OpenFile(fileLocation, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
@@ -96,7 +96,7 @@ func storeImage(res http.ResponseWriter, req *http.Request) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("assets/post/%s", filename), nil
+	return fmt.Sprintf("assets/%s/%s", foldername, filename), nil
 }
 
 //postFromClient is a function to create a new post

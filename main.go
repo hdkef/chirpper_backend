@@ -65,6 +65,7 @@ func main() {
 	router.HandleFunc("/endpoints/search", utils.Cors(endPointsHandler.Search(client)))
 	router.HandleFunc("/endpoints/comment", utils.Cors(endPointsHandler.EstablishComment(client)))
 	router.HandleFunc("/endpoints/postwithimage", utils.Cors(endPointsHandler.PostWithImage(client)))
+	router.HandleFunc("/endpoints/setting", utils.Cors(endPointsHandler.Setting(client)))
 
 	// spa := spaHandler{staticPath: os.Getenv("STATICPATH"), indexPath: "index.html"}
 	// router.PathPrefix("/").Handler(spa)
