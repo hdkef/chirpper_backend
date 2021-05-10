@@ -64,6 +64,7 @@ func (a *Auth) Login(client *firestore.Client) http.HandlerFunc {
 			Username:  result["Username"].(string),
 			Email:     result["Email"].(string),
 			AvatarURL: result["AvatarURL"].(string),
+			Desc:      result["Desc"].(string),
 		}
 
 		tokenString, err := createToken(&user)

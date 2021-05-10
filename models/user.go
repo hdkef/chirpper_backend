@@ -7,4 +7,5 @@ type User struct {
 	Email     string
 	AvatarURL string
 	Token     string
+	Desc      string
 }
