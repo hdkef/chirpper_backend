@@ -82,7 +82,7 @@ func storeImage(res http.ResponseWriter, req *http.Request, formfilename string,
 	}
 
 	filename := handler.Filename
-	fileLocation := filepath.Join(dir, os.Getenv("STATICPATH"), "assets", foldername, filename) //TOBEIMPLEMENTED "dist" "angular" "assets" "post"
+	fileLocation := filepath.Join(dir, os.Getenv("STATICPATH"), "assets", foldername, filename)
 
 	targetFile, err := os.OpenFile(fileLocation, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
