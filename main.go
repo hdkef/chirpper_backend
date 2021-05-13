@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
@@ -75,7 +76,7 @@ func main() {
 
 	fmt.Println("serving and listening")
 
-	err := http.ListenAndServe(address, router)
+	err := http.ListenAndServe(address, gziphandler.GzipHandler(router))
 	if err != nil {
 		panic(err)
 	}

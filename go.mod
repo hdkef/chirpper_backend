@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/firestore v1.5.0 // direct
 	cloud.google.com/go/storage v1.15.0 // direct
 	firebase.google.com/go v3.13.0+incompatible // indirect
+	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gorilla/mux v1.8.0 // direct
 	github.com/gorilla/websocket v1.4.2 // indirect
