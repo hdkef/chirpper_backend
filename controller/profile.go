@@ -63,11 +63,10 @@ func (x *EndPoints) Profile(client *firestore.Client) http.HandlerFunc {
 
 		result2, err := db.FindAllSubColByIDField("users", payload.ID, "ID", payload.ID, "feed")
 		if err != nil && err.Error() != "NO RESULT" {
-			fmt.Println("db error", err)
 			utils.ResError(res, http.StatusInternalServerError, err)
 			return
 		} else if err != nil && err.Error() == "NO RESULT" {
-			payloadToBeSent.Feed = nil
+			payloadToBeSent.Feed = []map[string]interface{}{}
 		} else {
 			payloadToBeSent.Feed = result2
 		}

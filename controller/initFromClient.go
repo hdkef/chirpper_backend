@@ -29,13 +29,9 @@ func initFromClient(payload models.MsgPayload) {
 func initFromServer(payload models.MsgPayload) {
 	db := NewDBRepo(payload.Client)
 	result, err := db.FindAllSubColByID("users", payload.ID, "feed")
-	if err != nil && err.Error() != "NO RESULT" {
+	if err != nil {
 		fmt.Println(err)
 		return
-	}
-
-	if err.Error() == "NO RESULT" {
-		result = []map[string]interface{}{}
 	}
 
 	payloadToBeSent := struct {

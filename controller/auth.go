@@ -193,11 +193,13 @@ func (a *Auth) Register(client *firestore.Client) http.HandlerFunc {
 		//here implement inserting registerForm to database
 		db := NewDBRepo(client)
 		_, err = db.InsertOne("users", map[string]interface{}{
-			"Username":  registerForm.Username,
-			"Password":  string(hashedPassByte),
-			"Email":     registerForm.Email,
-			"AvatarURL": "assets/user.svg",
-			"Desc":      "Hi !, i'm on chirpper",
+			"Username":   registerForm.Username,
+			"Password":   string(hashedPassByte),
+			"Email":      registerForm.Email,
+			"AvatarURL":  "assets/user.svg",
+			"Desc":       "Hi !, i'm on chirpper",
+			"followings": []string{},
+			"followers":  []string{},
 		})
 		if err != nil {
 			utils.ResError(res, http.StatusInternalServerError, err)
