@@ -15,6 +15,7 @@ import (
 	"cloud.google.com/go/firestore"
 )
 
+//postWithImage handle post feed request when storing an image file is needed
 func (x *EndPoints) PostWithImage(client *firestore.Client) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
@@ -67,6 +68,7 @@ func (x *EndPoints) PostWithImage(client *firestore.Client) http.HandlerFunc {
 	}
 }
 
+//storeImage will store image file and return image file path/dir
 func storeImage(res http.ResponseWriter, req *http.Request, formfilename string, foldername string) (string, error) {
 	uploadedFile, handler, err := req.FormFile(formfilename)
 	if err != nil {
