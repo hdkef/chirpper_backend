@@ -4,7 +4,6 @@ import (
 	"chirpper_backend/utils"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"cloud.google.com/go/firestore"
@@ -21,8 +20,6 @@ func (x *EndPoints) Search(client *firestore.Client) http.HandlerFunc {
 			return
 		}
 
-		fmt.Println("Search")
-
 		var payload struct {
 			Searchkey string
 		}
@@ -33,8 +30,6 @@ func (x *EndPoints) Search(client *firestore.Client) http.HandlerFunc {
 			return
 		}
 
-		fmt.Println("Searchkey", payload.Searchkey)
-
 		db := NewDBRepo(client)
 
 		result, err := db.FindAllByField("users", "Username", payload.Searchkey)
@@ -42,8 +37,6 @@ func (x *EndPoints) Search(client *firestore.Client) http.HandlerFunc {
 			utils.ResError(res, http.StatusInternalServerError, err)
 			return
 		}
-
-		fmt.Println(result)
 
 		err = json.NewEncoder(res).Encode(&result)
 		if err != nil {

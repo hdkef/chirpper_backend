@@ -5,10 +5,8 @@ import (
 	"chirpper_backend/utils"
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
-	"runtime"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -43,8 +41,6 @@ var upgrader websocket.Upgrader = websocket.Upgrader{
 func (x *EndPoints) CheckToken(client *firestore.Client) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
-		fmt.Println("CheckToken")
-
 		valid := verifyToken(req)
 		if valid != true {
 			utils.ResClearSite(&res)
@@ -60,7 +56,6 @@ func (x *EndPoints) CheckToken(client *firestore.Client) http.HandlerFunc {
 func (x *EndPoints) EstablishWS(client *firestore.Client) http.HandlerFunc {
 
 	return func(res http.ResponseWriter, req *http.Request) {
-		fmt.Println("establishWS()")
 
 		ws, err := upgrader.Upgrade(res, req, res.Header())
 		if err != nil {
@@ -70,8 +65,6 @@ func (x *EndPoints) EstablishWS(client *firestore.Client) http.HandlerFunc {
 
 		ctx, cancel := context.WithCancel(context.Background())
 
-		fmt.Println("beginning ", runtime.NumGoroutine())
-
 		go readMsg(ws, cancel, client)
 		go routeMsg(ws, ctx)
 	}
@@ -79,8 +72,6 @@ func (x *EndPoints) EstablishWS(client *firestore.Client) http.HandlerFunc {
 
 //readMsg is to read incoming msg from client, each ws.conn be assigned one readMsg goroutine
 func readMsg(ws *websocket.Conn, cancel context.CancelFunc, client *firestore.Client) {
-
-	fmt.Println("readMsg")
 
 	var payload models.MsgPayload = models.MsgPayload{
 		Conn:   ws,
@@ -106,12 +97,6 @@ func readMsg(ws *websocket.Conn, cancel context.CancelFunc, client *firestore.Cl
 
 //routeMsg is executed once to route every msg come to channel to corresponding function
 func routeMsg(ws *websocket.Conn, ctx context.Context) {
-
-	fmt.Println("routeMsg")
-
-	defer func() {
-		fmt.Println("after ctx.Done() ", runtime.NumGoroutine())
-	}()
 
 	for {
 		select {

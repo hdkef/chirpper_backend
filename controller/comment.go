@@ -3,10 +3,8 @@ package controller
 import (
 	"chirpper_backend/models"
 	"context"
-	"fmt"
 	"log"
 	"net/http"
-	"runtime"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -26,8 +24,6 @@ var postIDMap map[string]map[string]*websocket.Conn = make(map[string]map[string
 func (x *EndPoints) EstablishComment(client *firestore.Client) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
-		fmt.Println("establishComment()")
-
 		ws, err := upgrader.Upgrade(res, req, res.Header())
 		if err != nil {
 			log.Println(err)
@@ -35,8 +31,6 @@ func (x *EndPoints) EstablishComment(client *firestore.Client) http.HandlerFunc 
 		}
 
 		ctx, cancel := context.WithCancel(context.Background())
-
-		fmt.Println("beginning ", runtime.NumGoroutine())
 
 		go readComment(ws, cancel, client)
 		go routeComment(ws, ctx)
@@ -46,8 +40,6 @@ func (x *EndPoints) EstablishComment(client *firestore.Client) http.HandlerFunc 
 
 //initCommentFromClient handle if user went to comment
 func initCommentFromClient(payload models.MsgPayload) {
-
-	fmt.Println("initCommentFromClient()")
 
 	// valid := verifyTokenString(payload.Bearer)
 
@@ -69,12 +61,9 @@ func initCommentFromClient(payload models.MsgPayload) {
 //commentFromClient is to handle initation comment from client
 func initCommentFromServer(payload models.MsgPayload) {
 
-	fmt.Println("initCommentFromServer")
-
 	db := NewDBRepo(payload.Client)
 	result, err := db.FindAllSubColByID("chirps", payload.PostID, "comment")
 	if err != nil {
-		fmt.Println(err)
 		return
 	}
 	payloadToBeSent := struct {
@@ -98,8 +87,6 @@ func commentFromClient(payload models.MsgPayload) {
 	// 	return
 	// }
 
-	fmt.Println("commentFromClient")
-
 	db := NewDBRepo(payload.Client)
 
 	payload.Date = time.Now().Format("02-Jan-2006")
@@ -114,13 +101,11 @@ func commentFromClient(payload models.MsgPayload) {
 	})
 
 	if err != nil {
-		fmt.Println(err)
 		return
 	}
 
 	//send to my self the comment
 	go func() {
-		fmt.Println("writing payload to user..")
 		payload.Conn.WriteJSON(struct {
 			Type      string
 			ID        string
@@ -166,8 +151,6 @@ func broadcastComment(payload models.MsgPayload) {
 //readComment is to read incoming comment from client, each ws.conn be assigned one readMsg goroutine
 func readComment(ws *websocket.Conn, cancel context.CancelFunc, client *firestore.Client) {
 
-	fmt.Println("readComment")
-
 	var payload models.MsgPayload = models.MsgPayload{
 		Conn:   ws,
 		Client: client,
@@ -193,12 +176,6 @@ func readComment(ws *websocket.Conn, cancel context.CancelFunc, client *firestor
 //routeComment is executed once to route every msg come to channel to corresponding function
 func routeComment(ws *websocket.Conn, ctx context.Context) {
 
-	fmt.Println("routeComment")
-
-	defer func() {
-		fmt.Println("after ctx.Done() ", runtime.NumGoroutine())
-	}()
-
 	for {
 		select {
 		case <-ctx.Done():
@@ -213,7 +190,6 @@ func routeComment(ws *websocket.Conn, ctx context.Context) {
 }
 
 func commentPingPonger(payload models.MsgPayload) {
-	fmt.Println("pingPonger")
 
 	payload.Conn.SetPongHandler(func(string) error {
 		payload.Conn.SetReadDeadline(time.Now().Add(pongWait))
@@ -226,12 +202,10 @@ func commentPingPonger(payload models.MsgPayload) {
 		if postIDMap[payload.PostID][payload.ID] == payload.Conn {
 			delete(postIDMap[payload.PostID], payload.ID)
 		}
-		fmt.Println("postID map : ", postIDMap[payload.PostID])
 	}()
 	for {
 		select {
 		case <-timer.C:
-			fmt.Println("timer tick")
 			if err := payload.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}

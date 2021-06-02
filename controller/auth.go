@@ -235,19 +235,13 @@ func createToken(user *models.User) (string, error) {
 //VerifyToken is to verify token in header
 func verifyToken(req *http.Request) bool {
 
-	fmt.Println("VerifyToken")
-
 	token := req.Header.Get("BEARER")
-
-	fmt.Println("Token", token)
 
 	return verifyTokenString(token)
 }
 
 //VerifyTokenString will verify token from parameter string
 func verifyTokenString(token string) bool {
-
-	fmt.Println("VerifyTokenString")
 
 	if token == "" {
 		return false

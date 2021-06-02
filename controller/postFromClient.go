@@ -23,8 +23,6 @@ func (x *EndPoints) PostWithImage(client *firestore.Client) http.HandlerFunc {
 			return
 		}()
 
-		fmt.Println("PostWithImage")
-
 		valid := verifyToken(req)
 		if valid != true {
 			utils.ResClearSite(&res)
@@ -33,7 +31,6 @@ func (x *EndPoints) PostWithImage(client *firestore.Client) http.HandlerFunc {
 		}
 
 		if err := req.ParseMultipartForm(1024); err != nil {
-			fmt.Println(err)
 			utils.ResError(res, http.StatusInternalServerError, err)
 			return
 		}
@@ -55,7 +52,6 @@ func (x *EndPoints) PostWithImage(client *firestore.Client) http.HandlerFunc {
 		imgLocation, err := storeImage(res, req, "Image", "post")
 
 		if err != nil {
-			fmt.Println(err)
 			utils.ResError(res, http.StatusInternalServerError, err)
 			return
 		}
@@ -63,8 +59,6 @@ func (x *EndPoints) PostWithImage(client *firestore.Client) http.HandlerFunc {
 		payload.ImageURL = imgLocation
 
 		go postFromClient(payload)
-
-		fmt.Println(payload)
 	}
 }
 
@@ -72,43 +66,59 @@ func (x *EndPoints) PostWithImage(client *firestore.Client) http.HandlerFunc {
 func storeImage(res http.ResponseWriter, req *http.Request, formfilename string, foldername string) (string, error) {
 	uploadedFile, handler, err := req.FormFile(formfilename)
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 	defer uploadedFile.Close()
 
 	dir, err := os.Getwd()
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 
 	filename := handler.Filename
-	fileLocation := filepath.Join(dir, os.Getenv("STATICPATH"), "assets", foldername, filename)
+	folderpath := filepath.Join(dir, os.Getenv("STATICPATH"), "assets", foldername)
+	fileLocation := filepath.Join(folderpath, filename)
+
+	err = createNewFolderIfNotExist(folderpath)
+	if err != nil {
+		return "", err
+	}
 
 	targetFile, err := os.OpenFile(fileLocation, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 	defer targetFile.Close()
 
 	if _, err := io.Copy(targetFile, uploadedFile); err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 
 	return fmt.Sprintf("assets/%s/%s", foldername, filename), nil
 }
 
+//createNewFolderIfNotExist will check folder directory and create new folder if not exist
+func createNewFolderIfNotExist(path string) error {
+
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(path, os.ModePerm)
+		if err != nil {
+			return err
+		} else {
+			return nil
+		}
+	} else {
+		return nil
+	}
+}
+
 //postFromClient is a function to create a new post
 func postFromClient(payload models.MsgPayload) {
-	fmt.Println("postFromClient")
 
 	valid := verifyTokenString(payload.Bearer)
 
 	if valid == false {
-		fmt.Println("invalid bearer")
 		payload.Conn.Close()
 		return
 	}
@@ -131,7 +141,6 @@ func postFromClient(payload models.MsgPayload) {
 	go postFeedByIDID(payload.ID, payload)
 
 	result, err := db.FindOneByID("users", payload.ID)
-	fmt.Println(result)
 	if err != nil {
 		return
 	}
@@ -153,7 +162,6 @@ func postFromClient(payload models.MsgPayload) {
 
 //postFeedByID is intended for afterPostFeed alias insert new feed to user's followers's feed
 func postFeedByIDID(ID string, payload models.MsgPayload) {
-	fmt.Println("postFeedByID")
 
 	db := NewDBRepo(payload.Client)
 	err := db.InsertOneSubColByIDID("users", ID, "feed", payload.PostID, map[string]interface{}{
@@ -173,8 +181,6 @@ func postFeedByIDID(ID string, payload models.MsgPayload) {
 //afterPostFeed is update every user's followers feed
 func afterPostFeed(payload models.MsgPayload, followers []interface{}) {
 
-	fmt.Println("afterPostFeed")
-
 	var folIDChan chan string = make(chan string)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -185,8 +191,6 @@ func afterPostFeed(payload models.MsgPayload, followers []interface{}) {
 
 //brodcastNewFeed broadcasts new post to online followers
 func broadcastPostFeed(payload models.MsgPayload, followers []interface{}) {
-
-	fmt.Println("broadcastPostFeed")
 
 	var folIDChan chan string = make(chan string)
 
@@ -201,7 +205,6 @@ func broadcastPostFeed(payload models.MsgPayload, followers []interface{}) {
 func folIDSender(followers []interface{}, cancel context.CancelFunc, folIDChan chan string) {
 	defer cancel()
 	for _, v := range followers {
-		fmt.Println("send fol ID to channel", v.(string))
 		folIDChan <- v.(string)
 	}
 }
@@ -209,7 +212,6 @@ func folIDSender(followers []interface{}, cancel context.CancelFunc, folIDChan c
 //receiveUpdate receive follower ID and send payload to correspondingID
 func folIDBroadcastPostHandler(ctx context.Context, folIDChan chan string, payload models.MsgPayload) {
 	defer func() {
-		fmt.Println("channel closed")
 		close(folIDChan)
 	}()
 	for {
@@ -224,7 +226,6 @@ func folIDBroadcastPostHandler(ctx context.Context, folIDChan chan string, paylo
 
 func folIDAfterPostHandler(ctx context.Context, folIDChan chan string, payload models.MsgPayload) {
 	defer func() {
-		fmt.Println("channel closed")
 		close(folIDChan)
 	}()
 	for {
@@ -243,7 +244,6 @@ func sendPayload(folID string, payload models.MsgPayload) {
 	if res != true {
 		return
 	}
-	fmt.Println("found online user, writing json..")
 	ws.WriteJSON(struct {
 		Type      string
 		ID        string
@@ -266,7 +266,6 @@ func sendPayload(folID string, payload models.MsgPayload) {
 }
 
 func sendSelfPayload(payload models.MsgPayload) {
-	fmt.Println("writing payload to user..")
 	payload.Conn.WriteJSON(struct {
 		Type      string
 		ID        string

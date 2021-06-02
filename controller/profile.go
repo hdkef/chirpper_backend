@@ -4,7 +4,6 @@ import (
 	"chirpper_backend/utils"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"cloud.google.com/go/firestore"
@@ -21,8 +20,6 @@ func (x *EndPoints) Profile(client *firestore.Client) http.HandlerFunc {
 			return
 		}
 
-		fmt.Println("Profile")
-
 		var payload struct {
 			ID string
 		}
@@ -33,13 +30,10 @@ func (x *EndPoints) Profile(client *firestore.Client) http.HandlerFunc {
 			return
 		}
 
-		fmt.Println("ID", payload.ID)
-
 		db := NewDBRepo(client)
 
 		result, err := db.FindOneByID("users", payload.ID)
 		if err != nil {
-			fmt.Println("db error", err)
 			utils.ResError(res, http.StatusInternalServerError, err)
 			return
 		}
@@ -71,11 +65,8 @@ func (x *EndPoints) Profile(client *firestore.Client) http.HandlerFunc {
 			payloadToBeSent.Feed = result2
 		}
 
-		fmt.Println(payloadToBeSent)
-
 		err = json.NewEncoder(res).Encode(&payloadToBeSent)
 		if err != nil {
-			fmt.Println("db error", err)
 			utils.ResError(res, http.StatusInternalServerError, err)
 			return
 		}

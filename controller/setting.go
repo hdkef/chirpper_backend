@@ -4,7 +4,6 @@ import (
 	"chirpper_backend/utils"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"cloud.google.com/go/firestore"
@@ -14,7 +13,6 @@ import (
 func (x *EndPoints) Setting(client *firestore.Client) http.HandlerFunc {
 
 	return func(res http.ResponseWriter, req *http.Request) {
-		fmt.Println("Setting")
 
 		valid := verifyToken(req)
 		if valid != true {
@@ -24,7 +22,6 @@ func (x *EndPoints) Setting(client *firestore.Client) http.HandlerFunc {
 		}
 
 		if err := req.ParseMultipartForm(1024); err != nil {
-			fmt.Println(err)
 			utils.ResError(res, http.StatusInternalServerError, err)
 			return
 		}
@@ -49,7 +46,6 @@ func setAvaOnly(res http.ResponseWriter, req *http.Request, client *firestore.Cl
 
 	avaLocation, err := storeImage(res, req, "Avatar", "avatar")
 	if err != nil {
-		fmt.Println(err)
 		utils.ResError(res, http.StatusInternalServerError, err)
 		return
 	}
@@ -58,7 +54,6 @@ func setAvaOnly(res http.ResponseWriter, req *http.Request, client *firestore.Cl
 	err = updateAva(req.FormValue("ID"), avaLocation, client)
 	if err != nil {
 		//Implement error handling
-		fmt.Println(err)
 		utils.ResError(res, http.StatusInternalServerError, err)
 		return
 	}
@@ -71,7 +66,6 @@ func setAvaOnly(res http.ResponseWriter, req *http.Request, client *firestore.Cl
 
 	err = json.NewEncoder(res).Encode(&payloadToBeSent)
 	if err != nil {
-		fmt.Println(err)
 		utils.ResError(res, http.StatusInternalServerError, err)
 		return
 	}
@@ -86,7 +80,6 @@ func setDescOnly(res http.ResponseWriter, req *http.Request, client *firestore.C
 	err := updateDesc(req.FormValue("ID"), desc, client)
 	if err != nil {
 		//Implement error handling
-		fmt.Println(err)
 		utils.ResError(res, http.StatusInternalServerError, err)
 		return
 	}
@@ -99,7 +92,6 @@ func setDescOnly(res http.ResponseWriter, req *http.Request, client *firestore.C
 
 	err = json.NewEncoder(res).Encode(&payloadToBeSent)
 	if err != nil {
-		fmt.Println(err)
 		utils.ResError(res, http.StatusInternalServerError, err)
 		return
 	}
@@ -112,7 +104,6 @@ func setAvaAndDesc(res http.ResponseWriter, req *http.Request, client *firestore
 
 	avaLocation, err := storeImage(res, req, "Avatar", "avatar")
 	if err != nil {
-		fmt.Println(err)
 		utils.ResError(res, http.StatusInternalServerError, err)
 		return
 	}
@@ -120,14 +111,12 @@ func setAvaAndDesc(res http.ResponseWriter, req *http.Request, client *firestore
 	err = updateAva(req.FormValue("ID"), avaLocation, client)
 	if err != nil {
 		//Implement error handling
-		fmt.Println(err)
 		utils.ResError(res, http.StatusInternalServerError, err)
 		return
 	}
 	err = updateDesc(req.FormValue("ID"), desc, client)
 	if err != nil {
 		//Implement error handling
-		fmt.Println(err)
 		desc = ""
 	}
 	//TOBEIMPLEMENT update Desc and AvatarURL
@@ -142,7 +131,6 @@ func setAvaAndDesc(res http.ResponseWriter, req *http.Request, client *firestore
 
 	err = json.NewEncoder(res).Encode(&payloadToBeSent)
 	if err != nil {
-		fmt.Println(err)
 		utils.ResError(res, http.StatusInternalServerError, err)
 		return
 	}
